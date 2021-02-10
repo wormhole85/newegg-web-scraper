@@ -33,17 +33,24 @@ with open('graphics_cards.csv', mode='w', newline='') as graphics_cards_file:
                 title_tag = cell.find_all("a", attrs={"class": "item-title"})
                 product_name = title_tag[0].text
 
-                # checking for out of stock situations 
+                # checking for promo situations (out of stock, limited time offer) 
                 if cell.find_all("p", attrs={"class": "item-promo"}) != []:
                     # obtaining the price info
-                    price_tag = cell.find_all("p", attrs={"class": "item-promo"})
-                    pricing_info = price_tag[0].text
+                    promo_tag = cell.find_all("p", attrs={"class": "item-promo"})
+                    promo_info = promo_tag[0].text
 
-                    # obtaining the shipping info
-                    if cell.find_all("a", attrs={"class": "shipped-by-newegg"}) != []:
+                    if promo_info == "OUT OF STOCK":
+                        pricing_info = promo_info
                         shipping_tag = cell.find_all("a", attrs={"class": "shipped-by-newegg"})
                         shipping_info = shipping_tag[0].text
-                    else:
+                    else: # handles limited time offer
+                        price_tag = cell.find_all("li", attrs={"class": "price-current"})
+                        dollar_sign = price_tag[0].text[0]
+                        dollars = price_tag[0].strong.text
+                        cents = price_tag[0].sup.text
+
+                        pricing_info = dollar_sign + dollars + cents + ', ' + promo_info
+
                         shipping_tag = cell.find_all("li", attrs={"class": "price-ship"})
                         shipping_info = shipping_tag[0].text
                 else:
@@ -57,10 +64,10 @@ with open('graphics_cards.csv', mode='w', newline='') as graphics_cards_file:
                     # obtaining the shipping info
                     shipping_tag = cell.find_all("li", attrs={"class": "price-ship"})
                     shipping_info = shipping_tag[0].text
+                
+                file_writer.writerow([brand_name, product_name, pricing_info, shipping_info])
             except Exception as error:
                 print(f'Error that occurred: {error.__class__.__name__}')
                 print(f'Error message: {error}')
                 print(f'Cell where error occurred: {cell}')
                 print()
-            finally:
-                file_writer.writerow([brand_name, product_name, pricing_info, shipping_info])
